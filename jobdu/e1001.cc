@@ -42,5 +42,10 @@ int main(int argc, char** argv) {
     }
     // out put 
     std::cout << count << std::endl;
+    // release
+    for (int i = 0; i < M; ++i) {
+      delete [] matrix[i];
+    }
+    delete matrix;
   }
 }
