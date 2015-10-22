@@ -1,19 +1,17 @@
 #include <iostream>
-
-int index(std::string& key, char c) {
-  for (int i = 0; i < key.size(); i++) {
-    if (key[i] == c) {
-      return i;
-    }
-  }
-  return -1;
-}
+#include <string.h>
 
 int main(int argc, char** argv) {
+  char hash[256];
   std::string key;
   while (getline(std::cin, key)) {
     if (key == "#") {
       return 0;
+    }
+    // make hash table for search
+    memset(hash, 0, 256);
+    for (int i = 0; i < key.size(); i++) {
+      hash[key[i]] = i + 1;
     }
     // value input
     std::string value;
@@ -23,9 +21,8 @@ int main(int argc, char** argv) {
     int count[5] = {0};
     char *p = &value[0], *limit = p + value.size();
     for (; p < limit; ++p) {
-      int idx = index(key, *p);
-      if (idx != -1) {
-        count[idx]++;
+      if (hash[*p] != 0) {
+        count[hash[*p] - 1]++;
       } 
     }
     // output
