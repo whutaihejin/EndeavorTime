@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string.h>
+#include <assert.h>
 
 int main(int argc, char** argv) {
   char hash[256];
@@ -8,6 +9,8 @@ int main(int argc, char** argv) {
     if (key == "#") {
       return 0;
     }
+    // as described by the question
+    assert(key.size() <= 5);
     // make hash table for search
     memset(hash, 0, 256);
     for (int i = 0; i < key.size(); i++) {
