@@ -10,8 +10,10 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.map.TokenCounterMapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
+import javax.security.sasl.SaslClient;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -19,6 +21,7 @@ import java.util.StringTokenizer;
  * Created by taihejin on 15-11-15.
  */
 public class WordCount {
+
     public static class TokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
 
         private final static IntWritable one = new IntWritable(1);
@@ -50,6 +53,11 @@ public class WordCount {
         }
     }
 
+    private enum School {
+        SDAU,
+        WHU
+    }
+
     public static void main(String[] args) throws Exception {
 
         Configuration conf = new Configuration();
@@ -58,15 +66,17 @@ public class WordCount {
             System.err.println("Usage: WordCount <in> <out>");
             System.exit(1);
         }
-        Job job = new Job(conf, "word count");
+        Job job = Job.getInstance(conf, "word count");
         job.setJarByClass(WordCount.class);
         job.setMapperClass(TokenCounterMapper.class);
         job.setCombinerClass(IntSumReducer.class);
         job.setReducerClass(IntSumReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
         FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
-        FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
+        SequenceFileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
+        // FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }

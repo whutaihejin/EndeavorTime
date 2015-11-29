@@ -1,6 +1,5 @@
 package com.weibo.taihejin;
 
-import  com.weibo.taihejin.Preliminary;
 import org.junit.Test;
 import org.junit.Assert;
 /**
