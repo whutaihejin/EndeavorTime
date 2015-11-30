@@ -13,6 +13,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
@@ -88,18 +89,52 @@ public class SecondarySortingJob {
 
     public static class ConvertReducer extends Reducer<RecordKeyWritable, Text, NullWritable, Text> {
 
-        private static final String FILE_NAME_EQUAL = "EQUAL";
-        private static final String FILE_NAME_DIFF = "DIFF";
+        // four types of output
+        private static final String FILE_NAME_ONLINE_NULL = "ONLINE_NULL";
+        private static final String FILE_NAME_NULL_OFFLINE = "NULL_OFFLINE";
+        private static final String FILE_NAME_VALUE_EQUAL = "VALUE_EQUAL";
+        private static final String FILE_NAME_VALUE_DIFF = "VALUE_DIFF";
+
+        private static MultipleOutputs<NullWritable, Text> multipleOutputs;
+        private Text onlineValue = new Text();
+        private Text offlineValue = new Text();
+
+        @Override
+        public void setup(Context context) throws IOException, InterruptedException {
+            super.setup(context);
+            multipleOutputs = new MultipleOutputs<NullWritable, Text>(context);
+        }
 
         @Override
         public void reduce(RecordKeyWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             Iterator<Text> iter = values.iterator();
-            System.out.println("group ======= " + key.getKeyWritable());
-            while(iter.hasNext()) {
-                Text value = iter.next();
-                System.out.println((key.getTypeWritable() == SourceType.ONLINE ? " ONLINE\t" : " OFLINE\t") + value);
-                context.write(NullWritable.get(), value);
+
+            // we could assert that there is at least one element int the iter,
+            // but the first one may be the online one or the offline one. To
+            // naming the variable with consistency we assume the first one is
+            // online value, the next is offline value if there's one only for
+            // naming. we hope clarify your possible confusion with the comment.
+            onlineValue.clear();
+            offlineValue.clear();
+            onlineValue.set(iter.next());
+            if (iter.hasNext()) {
+                offlineValue.set(iter.next());
             }
+            System.out.println("online = " + onlineValue);
+            System.out.println("offline = " + offlineValue);
+            // may change the Granularity in the future.
+            if (onlineValue.equals(offlineValue)) {
+                multipleOutputs.write(NullWritable.get(), onlineValue, FILE_NAME_VALUE_EQUAL);
+            } else {
+                multipleOutputs.write(NullWritable.get(), onlineValue, FILE_NAME_VALUE_DIFF);
+            }
+
+        }
+
+        @Override
+        protected void cleanup(Context context) throws IOException, InterruptedException {
+            super.cleanup(context);
+            multipleOutputs.close();
         }
     }
 
