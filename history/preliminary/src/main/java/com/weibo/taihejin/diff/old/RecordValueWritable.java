@@ -1,5 +1,6 @@
-package com.weibo.taihejin.diff;
+package com.weibo.taihejin.diff.old;
 
+import com.weibo.taihejin.diff.SourceType;
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;

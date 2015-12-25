@@ -1,4 +1,4 @@
-package com.weibo.taihejin.diff.secondsort;
+package com.weibo.taihejin.diff.writable;
 
 import com.weibo.taihejin.diff.SourceType;
 import org.apache.hadoop.io.ByteWritable;
@@ -43,5 +43,26 @@ public class RecordValueWritable implements Writable {
 
     public void setValueWritable(Text value) {
         valueWritable.set(value);
+    }
+
+    public void clear() {
+        valueWritable.clear();
+    }
+
+    public void set(RecordValueWritable value) {
+        setTypeWritable(value.getTypeWritable());
+        setValueWritable(value.getValueWritable());
+    }
+
+    public boolean empty() {
+        return valueWritable.toString().equals("");
+    }
+
+    @Override
+    public String toString() {
+        if (empty()) {
+            return "NULL";
+        }
+        return (getTypeWritable() == SourceType.ONLINE ? "ONLINE\t" : "OFFLINE\t") + valueWritable;
     }
 }

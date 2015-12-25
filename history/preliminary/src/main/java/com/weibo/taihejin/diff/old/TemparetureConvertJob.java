@@ -1,8 +1,9 @@
-package com.weibo.taihejin.diff;
+package com.weibo.taihejin.diff.old;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
-import com.weibo.taihejin.diff.secondsort.RecordKeyWritable;
+import com.weibo.taihejin.diff.SourceType;
+import com.weibo.taihejin.diff.writable.RecordKeyWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;

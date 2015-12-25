@@ -1,4 +1,4 @@
-package com.weibo.taihejin.diff.secondsort;
+package com.weibo.taihejin.diff.old;
 
 import com.weibo.taihejin.diff.SourceType;
 import org.apache.hadoop.io.*;

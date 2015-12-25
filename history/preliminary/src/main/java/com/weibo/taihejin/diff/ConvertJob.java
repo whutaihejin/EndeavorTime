@@ -1,10 +1,9 @@
-package com.weibo.taihejin.diff.secondsort;
+package com.weibo.taihejin.diff;
 
 import com.google.common.base.Preconditions;
-import com.google.common.primitives.Ints;
-import com.weibo.taihejin.diff.RecordValueWritable;
-import com.weibo.taihejin.diff.SourceType;
-import com.weibo.taihejin.diff.TemparetureConvertJob;
+import com.weibo.taihejin.diff.writable.RecordKeyWritable;
+import com.weibo.taihejin.diff.writable.RecordValueWritable;
+import com.weibo.taihejin.diff.old.TemparetureConvertJob;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
@@ -22,15 +21,15 @@ import java.util.Iterator;
 /**
  * Created by taihejin on 15-11-29.
  */
-public class SecondarySortingJob {
+public class ConvertJob {
 
     private static final Text.Comparator TEXT_COMPARATOR = new Text.Comparator();
     private static final IntWritable.Comparator INT_COMPARATOR = new IntWritable.Comparator();
 
     private static class TempareturePartitioner
-            extends Partitioner<RecordKeyWritable, Text> {
+            extends Partitioner<RecordKeyWritable, RecordValueWritable> {
         @Override
-        public int getPartition(RecordKeyWritable key, Text value, int numPartitions) {
+        public int getPartition(RecordKeyWritable key, RecordValueWritable value, int numPartitions) {
             return (key.getKeyWritable().hashCode() & 0x7FFFFFF) % numPartitions;
         }
     }
@@ -50,6 +49,8 @@ public class SecondarySortingJob {
         }
 
     }
+
+
 
     private static class TemparetureSortingComparator implements RawComparator<RecordKeyWritable> {
 
@@ -78,26 +79,28 @@ public class SecondarySortingJob {
 
     }
 
-    public static class ConvertMapper extends Mapper<RecordKeyWritable, Text, RecordKeyWritable, Text> {
+    public static class ConvertMapper extends Mapper<RecordKeyWritable, RecordValueWritable, RecordKeyWritable, RecordValueWritable> {
 
         @Override
-        public void map(RecordKeyWritable key, Text value, Context context) throws IOException, InterruptedException {
+        public void map(RecordKeyWritable key, RecordValueWritable value, Context context) throws IOException, InterruptedException {
             context.write(key, value);
         }
 
     }
 
-    public static class ConvertReducer extends Reducer<RecordKeyWritable, Text, NullWritable, Text> {
+    public static class ConvertReducer extends Reducer<RecordKeyWritable, RecordValueWritable, NullWritable, Text> {
 
         // four types of output
         private static final String FILE_NAME_ONLINE_NULL = "ONLINE_NULL";
         private static final String FILE_NAME_NULL_OFFLINE = "NULL_OFFLINE";
         private static final String FILE_NAME_VALUE_EQUAL = "VALUE_EQUAL";
-        private static final String FILE_NAME_VALUE_DIFF = "VALUE_DIFF";
+        private static final String FILE_NAME_VALUE_DIFF_ONLINE = "VALUE_DIFF_ONLINE";
+        private static final String FILE_NAME_VALUE_DIFF_OFFLINE = "VALUE_DIFF_OFFLINE";
 
         private static MultipleOutputs<NullWritable, Text> multipleOutputs;
-        private Text onlineValue = new Text();
-        private Text offlineValue = new Text();
+
+        private RecordValueWritable onlineValue = new RecordValueWritable();
+        private RecordValueWritable offlineValue = new RecordValueWritable();
 
         @Override
         public void setup(Context context) throws IOException, InterruptedException {
@@ -106,8 +109,8 @@ public class SecondarySortingJob {
         }
 
         @Override
-        public void reduce(RecordKeyWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            Iterator<Text> iter = values.iterator();
+        public void reduce(RecordKeyWritable key, Iterable<RecordValueWritable> values, Context context) throws IOException, InterruptedException {
+            Iterator<RecordValueWritable> iter = values.iterator();
 
             // we could assert that there is at least one element int the iter,
             // but the first one may be the online one or the offline one. To
@@ -122,12 +125,27 @@ public class SecondarySortingJob {
             }
             System.out.println("online = " + onlineValue);
             System.out.println("offline = " + offlineValue);
-            // may change the Granularity in the future.
+            if (onlineValue.getTypeWritable() == SourceType.ONLINE) { // online value
+                if (!offlineValue.empty()) { // offline has value
+                    if (onlineValue.getValueWritable().equals(offlineValue.getValueWritable())) {
+                        multipleOutputs.write(NullWritable.get(), onlineValue.getValueWritable(), FILE_NAME_VALUE_EQUAL);
+                    } else {
+                        multipleOutputs.write(NullWritable.get(), onlineValue.getValueWritable(), FILE_NAME_VALUE_DIFF_ONLINE);
+                        multipleOutputs.write(NullWritable.get(), offlineValue.getValueWritable(), FILE_NAME_VALUE_DIFF_OFFLINE);
+                    }
+                } else {
+                    multipleOutputs.write(NullWritable.get(), onlineValue.getValueWritable(), FILE_NAME_ONLINE_NULL);
+                }
+            } else { // no online value
+                multipleOutputs.write(NullWritable.get(), onlineValue.getValueWritable(), FILE_NAME_NULL_OFFLINE);
+            }
+            // may change the Granularity in the future by parameter.
+            /*
             if (onlineValue.equals(offlineValue)) {
                 multipleOutputs.write(NullWritable.get(), onlineValue, FILE_NAME_VALUE_EQUAL);
             } else {
                 multipleOutputs.write(NullWritable.get(), onlineValue, FILE_NAME_VALUE_DIFF);
-            }
+            }*/
 
         }
 
@@ -153,7 +171,7 @@ public class SecondarySortingJob {
         job.setReducerClass(ConvertReducer.class);
 
         job.setMapOutputKeyClass(RecordKeyWritable.class);
-        job.setMapOutputValueClass(Text.class);
+        job.setMapOutputValueClass(RecordValueWritable.class);
 
         job.setOutputKeyClass(NullWritable.class);
         job.setOutputValueClass(Text.class);

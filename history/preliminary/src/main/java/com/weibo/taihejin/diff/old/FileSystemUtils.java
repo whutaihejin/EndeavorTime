@@ -1,4 +1,4 @@
-package com.weibo.taihejin.diff;
+package com.weibo.taihejin.diff.old;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;

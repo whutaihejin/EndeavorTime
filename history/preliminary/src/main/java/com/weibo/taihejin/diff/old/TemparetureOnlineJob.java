@@ -1,6 +1,5 @@
-package com.weibo.taihejin.diff.secondsort;
+package com.weibo.taihejin.diff.old;
 
-import com.weibo.taihejin.diff.RecordValueWritable;
 import com.weibo.taihejin.diff.SourceType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -16,23 +15,23 @@ import java.io.IOException;
 /**
  * Created by taihejin on 15-11-28.
  */
-public class SecondaryOnlineJob {
+public class TemparetureOnlineJob {
 
 
-    public static class TemparetureMapper extends Mapper<LongWritable, Text, RecordKeyWritable, Text> {
+    public static class TemparetureMapper extends Mapper<LongWritable, Text, Text, RecordValueWritable> {
 
-        private RecordKeyWritable keyWritable = new RecordKeyWritable();
+        private RecordValueWritable valueWritable = new RecordValueWritable();
 
         @Override
         public void setup(Context context) throws IOException, InterruptedException {
-            keyWritable.setTypeWritable(SourceType.ONLINE);
+            valueWritable.setTypeWritable(SourceType.ONLINE);
         }
 
         @Override
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            keyWritable.setKeyWritable(new Text(line.substring(0, 4)));
-            context.write(keyWritable, value);
+            valueWritable.setValueWritable(value);
+            context.write(new Text(line.substring(0, 4)), valueWritable);
         }
 
     }
@@ -42,14 +41,13 @@ public class SecondaryOnlineJob {
             String jobName,
             Path inputDir,
             Path outpurDir) throws Exception {
-
         Job job = Job.getInstance(conf, jobName);
         job.setJarByClass(TemparetureMapper.class);
 
         job.setMapperClass(TemparetureMapper.class);
 
-        job.setOutputKeyClass(RecordKeyWritable.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(RecordValueWritable.class);
 
         FileInputFormat.addInputPath(job, inputDir);
         SequenceFileOutputFormat.setOutputPath(job, outpurDir);

@@ -1,8 +1,5 @@
 package com.weibo.taihejin.diff;
 
-import com.weibo.taihejin.diff.secondsort.SecondaryOfflineJob;
-import com.weibo.taihejin.diff.secondsort.SecondaryOnlineJob;
-import com.weibo.taihejin.diff.secondsort.SecondarySortingJob;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -32,18 +29,18 @@ public class JobScheduler extends Configured implements Tool {
         Path input0 = new Path("/data0/input_online");
         Path output0 = new Path(tmp, "output0");
         //TemparetureOnlineJob.run(conf, "online", input0, output0);
-        SecondaryOnlineJob.run(conf, "online", input0, output0);
+        ConvertHFileJob.run(conf, "online", input0, output0);
 
         // stage 1
         Path input1 = new Path("/data0/input_offline");
         Path output1 = new Path(tmp, "output1");
         //TemparetureOfflineJob.run(conf, "offline", input1, output1);
-        SecondaryOfflineJob.run(conf, "offline", input1, output1);
+        ConvertHiveJob.run(conf, "offline", input1, output1);
 
         // stage 2
         Path output2 = new Path(tmp, "output2");
         //TemparetureConvertJob.run(conf, "diff", output0, output1, output2);
-        SecondarySortingJob.run(conf, "diff", output0, output1, output2);
+        ConvertJob.run(conf, "diff", output0, output1, output2);
         return 0;
     }
 
