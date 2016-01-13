@@ -15,6 +15,8 @@
         <junit.version>4.10</junit.version>
         <hadoop.version>2.6.0</hadoop.version>
         <plugin.shade.version>1.2.1</plugin.shade.version>
+        <alibaba.json.version>1.1.30</alibaba.json.version>
+        <maven.compiler.plugin.version>3.1</maven.compiler.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -61,6 +63,11 @@
                 <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
                 <version>${hadoop.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${alibaba.json.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -84,6 +91,15 @@
                             </configuration>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <source>1.6</source>
+                        <target>1.6</target>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

@@ -43,6 +43,20 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-jobclient</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.weibo.inf</groupId>
+            <artifactId>wgre-metastore</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.weibo.inf</groupId>
+            <artifactId>wgre-client</artifactId>
+            <version>0.10</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -63,12 +77,20 @@
                                     <!--<mainClass>com.weibo.taihejin.diff.JobScheduler</mainClass>-->
                                     <!--<mainClass>com.weibo.taihejin.explore.URLCat</mainClass>-->
                                     <!--<mainClass>com.weibo.taihejin.explore.FileSystemCat</mainClass>-->
-                                    <mainClass>com.weibo.taihejin.explore.FileSystemDoubleCat</mainClass>
+                                    <mainClass>com.weibo.taihejin.compact.JournalScheduler</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>
